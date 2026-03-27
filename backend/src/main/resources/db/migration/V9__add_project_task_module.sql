@@ -1,0 +1,82 @@
+CREATE TABLE projects (
+    project_id BIGINT NOT NULL AUTO_INCREMENT,
+    company_id BIGINT NOT NULL,
+    owner_employee_id BIGINT NULL,
+    project_name VARCHAR(150) NOT NULL,
+    project_code VARCHAR(50) NOT NULL,
+    description VARCHAR(500) NULL,
+    start_date DATE NULL,
+    end_date DATE NULL,
+    active BIT NOT NULL DEFAULT b'1',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (project_id),
+    CONSTRAINT uk_projects_company_code UNIQUE (company_id, project_code),
+    CONSTRAINT fk_projects_company FOREIGN KEY (company_id) REFERENCES companies (company_id),
+    CONSTRAINT fk_projects_owner_employee FOREIGN KEY (owner_employee_id) REFERENCES employees (employee_id),
+    INDEX idx_projects_company (company_id),
+    INDEX idx_projects_deleted_at (deleted_at)
+);
+
+CREATE TABLE tasks (
+    task_id BIGINT NOT NULL AUTO_INCREMENT,
+    company_id BIGINT NOT NULL,
+    project_id BIGINT NOT NULL,
+    assignee_employee_id BIGINT NULL,
+    title VARCHAR(160) NOT NULL,
+    description VARCHAR(1000) NULL,
+    status VARCHAR(30) NOT NULL,
+    priority VARCHAR(30) NOT NULL,
+    due_date DATE NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (task_id),
+    CONSTRAINT fk_tasks_company FOREIGN KEY (company_id) REFERENCES companies (company_id),
+    CONSTRAINT fk_tasks_project FOREIGN KEY (project_id) REFERENCES projects (project_id),
+    CONSTRAINT fk_tasks_assignee_employee FOREIGN KEY (assignee_employee_id) REFERENCES employees (employee_id),
+    INDEX idx_tasks_project (project_id),
+    INDEX idx_tasks_company (company_id),
+    INDEX idx_tasks_deleted_at (deleted_at)
+);
+
+CREATE TABLE task_comments (
+    task_comment_id BIGINT NOT NULL AUTO_INCREMENT,
+    company_id BIGINT NOT NULL,
+    task_id BIGINT NOT NULL,
+    comment_text VARCHAR(1000) NOT NULL,
+    commented_by_user_id BIGINT NOT NULL,
+    commented_by_name VARCHAR(160) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (task_comment_id),
+    CONSTRAINT fk_task_comments_company FOREIGN KEY (company_id) REFERENCES companies (company_id),
+    CONSTRAINT fk_task_comments_task FOREIGN KEY (task_id) REFERENCES tasks (task_id),
+    CONSTRAINT fk_task_comments_user FOREIGN KEY (commented_by_user_id) REFERENCES users (user_id),
+    INDEX idx_task_comments_task (task_id),
+    INDEX idx_task_comments_deleted_at (deleted_at)
+);
+
+CREATE TABLE task_attachments (
+    task_attachment_id BIGINT NOT NULL AUTO_INCREMENT,
+    company_id BIGINT NOT NULL,
+    task_id BIGINT NOT NULL,
+    original_file_name VARCHAR(255) NOT NULL,
+    stored_file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(120) NOT NULL,
+    file_size BIGINT NOT NULL,
+    storage_path VARCHAR(600) NOT NULL,
+    uploaded_by_user_id BIGINT NOT NULL,
+    uploaded_by_name VARCHAR(160) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (task_attachment_id),
+    CONSTRAINT fk_task_attachments_company FOREIGN KEY (company_id) REFERENCES companies (company_id),
+    CONSTRAINT fk_task_attachments_task FOREIGN KEY (task_id) REFERENCES tasks (task_id),
+    CONSTRAINT fk_task_attachments_user FOREIGN KEY (uploaded_by_user_id) REFERENCES users (user_id),
+    INDEX idx_task_attachments_task (task_id),
+    INDEX idx_task_attachments_deleted_at (deleted_at)
+);

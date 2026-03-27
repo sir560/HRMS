@@ -1,0 +1,43 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Java / Maven
+backend/target/
+backend/.mvn/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Runtime logs and temp output
+backend/run-logs/
+frontend/run-logs/
+logs/
+*.out.log
+*.err.log
+
+# Local helper/probe files
+BcryptGen.java
+BcryptGen.class
+JdbcProbe.java
+JdbcProbe.class
+
+# Optional local database files
+*.sqlite
+*.db

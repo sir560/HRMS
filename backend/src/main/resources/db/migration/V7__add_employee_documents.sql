@@ -1,0 +1,22 @@
+CREATE TABLE employee_documents (
+    employee_document_id BIGINT NOT NULL AUTO_INCREMENT,
+    company_id BIGINT NOT NULL,
+    employee_id BIGINT NOT NULL,
+    document_type VARCHAR(60) NOT NULL,
+    original_file_name VARCHAR(255) NOT NULL,
+    stored_file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(120) NOT NULL,
+    file_size BIGINT NOT NULL,
+    storage_path VARCHAR(600) NOT NULL,
+    uploaded_by_user_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (employee_document_id),
+    CONSTRAINT fk_employee_documents_company FOREIGN KEY (company_id) REFERENCES companies (company_id),
+    CONSTRAINT fk_employee_documents_employee FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
+    CONSTRAINT fk_employee_documents_uploaded_by FOREIGN KEY (uploaded_by_user_id) REFERENCES users (user_id),
+    INDEX idx_employee_documents_employee (employee_id),
+    INDEX idx_employee_documents_company (company_id),
+    INDEX idx_employee_documents_deleted_at (deleted_at)
+);

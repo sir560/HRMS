@@ -1,0 +1,231 @@
+# 📘 HRMS PRODUCTION BLUEPRINT (FOR CODEX)
+
+## 🎯 OBJECTIVE
+Build a production-ready multi-tenant HRMS system using:
+- Backend: Java Spring Boot
+- Frontend: React (Vite + Tailwind)
+- Database: MySQL
+- Auth: JWT + Refresh Token
+
+---
+
+# 🧠 SYSTEM RULES (STRICT)
+
+- Follow layered architecture:
+  Controller → Service → Repository → DB
+- Use DTO for all APIs
+- Use global exception handling
+- All tables MUST include `company_id` (multi-tenant)
+- Use standard API response:
+  { success, message, data, meta }
+- Use REST API prefix: `/api/v1`
+- Use role-based access control (RBAC)
+
+---
+
+# 🧩 MODULES (BUILD IN ORDER)
+
+## 1. AUTH MODULE (PRIORITY 1)
+Features:
+- Register Company
+- Login (email + password + company_code)
+- JWT + Refresh Token
+- Forgot Password (OTP)
+- Logout
+
+APIs:
+- POST /auth/register-company
+- POST /auth/login
+- POST /auth/refresh
+- POST /auth/logout
+- POST /auth/forgot-password
+- POST /auth/reset-password
+- GET  /auth/me
+
+---
+
+## 2. EMPLOYEE MODULE
+Features:
+- Employee CRUD
+- Department
+- Designation
+- Employee Directory
+
+APIs:
+- GET /employees
+- POST /employees
+- GET /employees/{id}
+- PUT /employees/{id}
+- DELETE /employees/{id}
+- GET /departments
+- POST /departments
+- GET /designations
+
+---
+
+## 3. ATTENDANCE MODULE
+Features:
+- Clock-in / Clock-out
+- Working hours calculation
+- Attendance status
+
+APIs:
+- POST /attendance/clock-in
+- POST /attendance/clock-out
+- GET /attendance
+- GET /attendance/today
+- PUT /attendance/{id}
+
+---
+
+## 4. LEAVE MODULE
+Features:
+- Leave types
+- Leave balance
+- Apply leave
+- Approval workflow
+
+APIs:
+- GET /leave-types
+- GET /leave/balance
+- POST /leave/apply
+- GET /leave/my-requests
+- POST /leave/{id}/approve
+- POST /leave/{id}/reject
+
+---
+
+## 5. PAYROLL MODULE
+Features:
+- Salary structure
+- Payroll run
+- Salary slip
+
+APIs:
+- POST /salary-structures
+- POST /payroll/run
+- GET /payroll/{month}/{year}
+- GET /payroll/slip/{empId}/{month}/{year}
+
+---
+
+## 6. TASK MODULE
+Features:
+- Project
+- Task assignment
+- Task status
+- Comments
+
+APIs:
+- POST /projects
+- GET /projects
+- POST /tasks
+- GET /tasks
+- PUT /tasks/{id}/status
+
+---
+
+## 7. OTHER MODULES
+- Visits
+- Meetings
+- Files
+- Notifications
+- Analytics
+
+---
+
+# 🗄️ DATABASE (CORE TABLES)
+
+## CORE
+- companies
+- users
+- employees
+- departments
+- designations
+
+## HR
+- attendance
+- leave_types
+- leave_requests
+- leave_approvals
+
+## PAYROLL
+- salary_structures
+- payroll_runs
+- payroll_details
+
+## TASK
+- projects
+- tasks
+- task_comments
+
+## OTHER
+- visits
+- meetings
+- files
+- notifications
+
+---
+
+# ⚙️ BACKEND RULES (SPRING BOOT)
+
+- Use Spring Boot latest
+- Use Spring Security + JWT
+- Use JPA/Hibernate
+- Use Lombok
+- Use validation annotations (@Valid)
+
+Generate:
+- Entity
+- DTO
+- Repository
+- Service
+- Controller
+
+---
+
+# 🎨 FRONTEND RULES (REACT)
+
+- Use Vite
+- Use functional components
+- Use Axios for API
+- Use interceptors for JWT
+- Create:
+  - Login page
+  - Dashboard
+  - Employee page
+
+---
+
+# 🚀 CODEX EXECUTION STRATEGY
+
+## STEP 1 (START HERE)
+"Read HRMS_BLUEPRINT.md and implement authentication module with Spring Boot including JWT and RBAC"
+
+## STEP 2
+"Using HRMS blueprint, create employee module with CRUD APIs"
+
+## STEP 3
+"Build React frontend for login and employee dashboard"
+
+## STEP 4
+"Implement attendance module with clock-in/out logic"
+
+---
+
+# ⚠️ IMPORTANT RULES FOR CODEX
+
+- Always implement backend first
+- Then generate frontend
+- Follow modular approach
+- Do not generate dummy code
+- Ensure production-ready structure
+
+---
+
+# ✅ OUTPUT EXPECTATION
+
+- Clean folder structure
+- Working APIs
+- Proper layering
+- Scalable code
