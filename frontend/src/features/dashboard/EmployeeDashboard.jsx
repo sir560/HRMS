@@ -1,11 +1,11 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import EmptyState from "../../components/ui/EmptyState";
 import Loader from "../../components/ui/Loader";
+import { employeeApi, readApiErrorMessage } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import { authApi, employeeApi, readApiErrorMessage } from "../../services/api";
 
 const initialDepartmentForm = {
   departmentName: "",
@@ -51,7 +51,7 @@ const initialFilters = {
 };
 
 export default function EmployeeDashboard() {
-  const { user, setSession } = useAuth();
+  const { user } = useAuth();
   const [employeesPage, setEmployeesPage] = useState(initialPageState);
   const [departments, setDepartments] = useState([]);
   const [designations, setDesignations] = useState([]);
@@ -88,8 +88,7 @@ export default function EmployeeDashboard() {
     setError("");
 
     try {
-      const [meResponse, departmentResponse, designationResponse] = await Promise.all([
-        authApi.me(),
+      const [departmentResponse, designationResponse] = await Promise.all([
         employeeApi.getDepartments(),
         employeeApi.getDesignations(),
       ]);
@@ -98,10 +97,6 @@ export default function EmployeeDashboard() {
       const nextDesignations = designationResponse.data || [];
 
       startTransition(() => {
-        setSession((current) => ({
-          ...current,
-          user: meResponse.data,
-        }));
         setDepartments(nextDepartments);
         setDesignations(nextDesignations);
         setEmployeeForm((current) => ({
@@ -113,7 +108,7 @@ export default function EmployeeDashboard() {
 
       await fetchEmployees(0);
     } catch (requestError) {
-      setError(readApiErrorMessage(requestError, "Unable to load dashboard data."));
+      setError(readApiErrorMessage(requestError, "Unable to load directory data."));
     } finally {
       setIsLoading(false);
     }
@@ -271,62 +266,103 @@ export default function EmployeeDashboard() {
   }
 
   const employees = employeesPage.content || [];
-  const activeEmployees = employees.filter((employee) => employee.active).length;
 
   return (
-    <div className="space-y-6">
-      <section className="dashboard-hero">
-        <div className="dashboard-hero-grid">
-          <div className="hero-stack">
-            <div>
-              <div className="eyebrow">Employee command center</div>
-              <h1 className="hero-title">Executive Dashboard</h1>
-              <p className="hero-copy">
-                Personnel metrics and operational overview for the current workspace. Monitor structure, active headcount, and day-to-day movement from one editorial control plane.
-              </p>
-            </div>
+    <div className="space-y-8">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Employee Directory</h1>
+          <p className="page-description">Manage and monitor {employeesPage.totalElements || 0} active team members across {departments.length || 0} departments.</p>
+        </div>
+        <div className="header-actions">
+          <Button onClick={resetEmployeeForm} type="button" disabled={!canManageEmployees}>Add New Employee</Button>
+        </div>
+      </header>
 
-            <div className="hero-chip-row">
-              <Link className="hero-chip" to="/projects">Directory</Link>
-              <Link className="hero-chip" to="/attendance">Attendance</Link>
-              <Link className="hero-chip" to="/payroll">Payroll</Link>
-              <Link className="hero-chip" to="/leaves/approvals">Approvals</Link>
-            </div>
+      {(error || feedback) && <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || feedback}</div>}
 
-            <div className="header-actions">
-              <Button variant="secondary" onClick={() => void hydrateReferenceData()}>Export-ready refresh</Button>
-              <Button onClick={resetEmployeeForm} type="button" disabled={!canManageEmployees}>New Hire</Button>
-            </div>
-          </div>
+      <section className="directory-toolbar">
+        <div className="directory-filter-pill">
+          <span>Filter By</span>
+          <select name="departmentId" onChange={handleFilterChange} value={filters.departmentId}>
+            <option value="">All Departments</option>
+            {departments.map((department) => (
+              <option key={department.departmentId} value={department.departmentId}>{department.departmentName}</option>
+            ))}
+          </select>
+        </div>
 
-          <aside className="hero-side-panel">
-            <h3>Operational snapshot</h3>
-            <ul>
-              <li>
-                <span>Total employees</span>
-                <strong>{employeesPage.totalElements}</strong>
-              </li>
-              <li>
-                <span>Departments</span>
-                <strong>{departments.length}</strong>
-              </li>
-              <li>
-                <span>Operator</span>
-                <strong>{user?.firstName || "Current"} {user?.lastName || "User"}</strong>
-              </li>
-            </ul>
-          </aside>
+        <div className="directory-filter-pill">
+          <span>Status</span>
+          <select name="active" onChange={handleFilterChange} value={filters.active}>
+            <option value="true">Active Status</option>
+            <option value="">All Records</option>
+            <option value="false">Inactive Only</option>
+          </select>
+        </div>
+
+        <div className="directory-view-toggle">
+          <button className="active" type="button">Grid</button>
+          <button type="button">List</button>
         </div>
       </section>
 
-      <section className="stats-grid">
-        <StatCard label="Total employees" value={employeesPage.totalElements} detail={`${activeEmployees} active on this page`} />
-        <StatCard label="Today's coverage" value={departments.length ? `${Math.max(activeEmployees, 0)}` : "0"} detail="Directory currently visible in this view" variant="warning" />
-        <StatCard label="Pending actions" value={designations.length} detail="Designation structures available for assignment" variant="danger" />
-        <StatCard label="Next payroll run" value="Ready" detail={`${departments.length} departments connected`} />
-      </section>
+      <section className="directory-shell">
+        {isLoading || isListLoading ? (
+          <div className="loading-state gap-3">
+            <Loader /> Loading employee directory...
+          </div>
+        ) : employees.length ? (
+          <>
+            <div className="directory-head">
+              <span>Employee Info</span>
+              <span>Employee ID</span>
+              <span>Department</span>
+              <span>Status</span>
+              <span className="text-right">Actions</span>
+            </div>
 
-      {(error || feedback) && <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || feedback}</div>}
+            <div className="directory-list">
+              {employees.map((employee) => (
+                <div className="directory-row" key={employee.employeeId}>
+                  <div className={`directory-ribbon ${ribbonClass(employee.employmentStatus)}`}></div>
+                  <div className="directory-person">
+                    <div className="directory-avatar">{initialsFor(employee.firstName, employee.lastName)}</div>
+                    <div>
+                      <h4>{employee.firstName} {employee.lastName}</h4>
+                      <p>{employee.designation || "Team Member"}</p>
+                    </div>
+                  </div>
+                  <div className="directory-meta">#{employee.employeeCode}</div>
+                  <div className="directory-meta">{employee.department?.departmentName || "-"}</div>
+                  <div>
+                    <span className={`directory-status ${statusClass(employee.employmentStatus)}`}>{formatEmploymentStatus(employee.employmentStatus)}</span>
+                  </div>
+                  <div className="directory-actions">
+                    <Link className="directory-action-link" to={`/employees/${employee.employeeId}`}>See</Link>
+                    {canManageEmployees ? <button className="directory-action-link" onClick={() => startEditingEmployee(employee)} type="button">Edit</button> : null}
+                    {canDeleteEmployees ? (
+                      <button className="directory-action-link danger" disabled={deletingEmployeeId === employee.employeeId} onClick={() => void handleDeleteEmployee(employee)} type="button">
+                        {deletingEmployeeId === employee.employeeId ? "..." : "Remove"}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="directory-pagination">
+              <p>Showing {employeesPage.page * employeesPage.size + 1}-{employeesPage.page * employeesPage.size + employees.length} of {employeesPage.totalElements || employees.length} entries</p>
+              <div className="pagination-actions">
+                <Button variant="ghost" disabled={!employeesPage.hasPrevious} onClick={() => void fetchEmployees(employeesPage.page - 1)} type="button">Previous</Button>
+                <Button variant="ghost" disabled={!employeesPage.hasNext} onClick={() => void fetchEmployees(employeesPage.page + 1)} type="button">Next</Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <EmptyState title="No employees found" description="Adjust filters or create a new employee record." />
+        )}
+      </section>
 
       <section className="workspace-grid workspace-grid-wide">
         <Card title="Departments" description="Create the teams that employees belong to.">
@@ -347,7 +383,7 @@ export default function EmployeeDashboard() {
           </form>
         </Card>
 
-        <Card title={editingEmployeeId ? "Update employee profile" : "Add team member"} description="Use this form to create or update employee records without touching existing APIs.">
+        <Card title={editingEmployeeId ? "Update employee profile" : "Add team member"} description="Use this form to create or update employee records.">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <span className="badge">{canManageEmployees ? "HR management access" : "Read-only access"}</span>
             {editingEmployeeId ? <Button variant="ghost" onClick={resetEmployeeForm} type="button">Cancel edit</Button> : null}
@@ -389,100 +425,8 @@ export default function EmployeeDashboard() {
               {isSavingEmployee ? <span className="flex items-center gap-2"><Loader /> Saving employee</span> : editingEmployeeId ? "Update employee" : "Create employee"}
             </Button>
           </form>
-
-          {departments.length === 0 || designations.length === 0 ? <p className="mt-4 hint-text">Create at least one department and one designation before adding employees.</p> : null}
-          {!canManageEmployees ? <p className="mt-4 hint-text">Your role can browse the directory but cannot modify employee records.</p> : null}
         </Card>
       </section>
-
-      <Card title="Employee directory" description="Search, filter, paginate, and maintain the employee list.">
-        <div className="filter-grid">
-          <input className="search-input" name="search" onChange={handleFilterChange} placeholder="Search employees" type="search" value={filters.search} />
-          <select name="departmentId" onChange={handleFilterChange} value={filters.departmentId}>
-            <option value="">All departments</option>
-            {departments.map((department) => <option key={department.departmentId} value={department.departmentId}>{department.departmentName}</option>)}
-          </select>
-          <select name="designationId" onChange={handleFilterChange} value={filters.designationId}>
-            <option value="">All designations</option>
-            {designations.map((designation) => <option key={designation.designationId} value={designation.designationId}>{designation.designationName}</option>)}
-          </select>
-          <select name="employmentStatus" onChange={handleFilterChange} value={filters.employmentStatus}>
-            <option value="">All statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="ON_PROBATION">On probation</option>
-            <option value="NOTICE_PERIOD">Notice period</option>
-            <option value="RESIGNED">Resigned</option>
-            <option value="TERMINATED">Terminated</option>
-          </select>
-          <select name="active" onChange={handleFilterChange} value={filters.active}>
-            <option value="">All records</option>
-            <option value="true">Active only</option>
-            <option value="false">Inactive only</option>
-          </select>
-        </div>
-
-        <div className="mt-6">
-          {isLoading || isListLoading ? (
-            <div className="loading-state gap-3">
-              <Loader /> Loading employee workspace...
-            </div>
-          ) : employees.length ? (
-            <>
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Employee</th>
-                      <th>Department</th>
-                      <th>Designation</th>
-                      <th>Status</th>
-                      <th>Joined</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employees.map((employee) => (
-                      <tr key={employee.employeeId}>
-                        <td>
-                          <div className="space-y-1">
-                            <div className="font-semibold text-slate-900">{employee.firstName} {employee.lastName}</div>
-                            <div className="text-xs text-slate-500">{employee.employeeCode} · {employee.email}</div>
-                          </div>
-                        </td>
-                        <td>{employee.department?.departmentName || "-"}</td>
-                        <td>{employee.designation || "-"}</td>
-                        <td><span className="status-chip">{employee.employmentStatus.replaceAll("_", " ")}</span></td>
-                        <td>{employee.dateOfJoining}</td>
-                        <td>
-                          <div className="table-actions">
-                            <Link className="badge" to={`/employees/${employee.employeeId}`}>Profile</Link>
-                            {canManageEmployees ? <Button variant="ghost" size="sm" onClick={() => startEditingEmployee(employee)} type="button">Edit</Button> : null}
-                            {canDeleteEmployees ? (
-                              <Button variant="danger" size="sm" disabled={deletingEmployeeId === employee.employeeId} onClick={() => void handleDeleteEmployee(employee)} type="button">
-                                {deletingEmployeeId === employee.employeeId ? "Deleting..." : "Delete"}
-                              </Button>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="pagination-bar">
-                <span>Page {employeesPage.page + 1} of {Math.max(employeesPage.totalPages, 1)} · {employeesPage.totalElements} employees</span>
-                <div className="pagination-actions">
-                  <Button variant="ghost" disabled={!employeesPage.hasPrevious} onClick={() => void fetchEmployees(employeesPage.page - 1)} type="button">Previous</Button>
-                  <Button variant="ghost" disabled={!employeesPage.hasNext} onClick={() => void fetchEmployees(employeesPage.page + 1)} type="button">Next</Button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <EmptyState title="No employees found" description="Adjust the filters or create a new employee to populate the directory." />
-          )}
-        </div>
-      </Card>
     </div>
   );
 }
@@ -504,13 +448,30 @@ function hasAnyRole(user, roles) {
   return roles.some((role) => userRoles.includes(role));
 }
 
-function StatCard({ label, value, detail, variant = "default" }) {
-  return (
-    <article className={`stat-card ${variant}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
-  );
+function initialsFor(firstName, lastName) {
+  return `${firstName?.[0] || "E"}${lastName?.[0] || "M"}`;
 }
 
+function formatEmploymentStatus(status) {
+  return status.replaceAll("_", " ");
+}
+
+function statusClass(status) {
+  if (status === "ACTIVE") {
+    return "active";
+  }
+  if (status === "TERMINATED" || status === "RESIGNED") {
+    return "inactive";
+  }
+  return "on-leave";
+}
+
+function ribbonClass(status) {
+  if (status === "ACTIVE") {
+    return "active";
+  }
+  if (status === "TERMINATED" || status === "RESIGNED") {
+    return "inactive";
+  }
+  return "on-leave";
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import Button from "../../components/ui/Button";
 import { employeeApi, projectApi, readApiErrorMessage } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import ProjectNav from "./ProjectNav";
 
 const initialProjectForm = {
   projectName: "",
@@ -173,27 +173,175 @@ export default function ProjectsPage() {
   }
 
   const selectedProject = projects.find((project) => String(project.projectId) === selectedProjectId) || null;
+  const spotlightProject = selectedProject || projects[0] || null;
+  const secondaryProject = projects.find((project) => project.projectId !== spotlightProject?.projectId) || null;
+  const governanceColumns = {
+    TODO: [],
+    IN_PROGRESS: [],
+    IN_REVIEW: [],
+    DONE: [],
+  };
+
+  (spotlightProject?.tasks || []).forEach((task) => {
+    if (governanceColumns[task.status]) {
+      governanceColumns[task.status].push(task);
+    }
+  });
+
+  const employeeCapacity = employees.slice(0, 4);
 
   return (
-    <div className="dashboard-shell">
-      <header className="dashboard-header">
+    <div className="space-y-8">
+      <header className="page-header">
         <div>
-          <div className="eyebrow">Project workspace</div>
-          <h1>Projects and tasks</h1>
-          <p>Create projects, assign tasks, track status, and collaborate with files and comments.</p>
+          <div className="eyebrow">Architect HRMS</div>
+          <h1 className="page-title">Operational Pulse</h1>
+          <p className="page-description">Tracking {projects.length || 0} active high-scale developments.</p>
+        </div>
+        <div className="header-actions">
+          <span className="hero-chip">{employees.length || 0} Staff</span>
+          <Button variant="secondary">Filter View</Button>
         </div>
       </header>
 
-      <ProjectNav />
-
       {(error || message) && <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || message}</div>}
 
-      <section className="workspace-grid workspace-grid-wide">
-        <article className="panel form-panel">
+      <section className="projects-hero-grid">
+        <article className="project-spotlight-card">
+          <div className="project-spotlight-flag">High Priority</div>
+          {spotlightProject ? (
+            <>
+              <div className="row-between">
+                <div>
+                  <h2>{spotlightProject.projectName}</h2>
+                  <p>{spotlightProject.description || "Mixed-use sustainable development currently in active execution."}</p>
+                </div>
+                <div className="project-spotlight-date">
+                  <span>Due Date</span>
+                  <strong>{spotlightProject.endDate || "Oct 24, 2024"}</strong>
+                </div>
+              </div>
+
+              <div className="project-spotlight-metrics">
+                <SpotlightMetric label="Execution Progress" value={`${calculateProjectProgress(spotlightProject.tasks)}%`} detail="" />
+                <SpotlightMetric label="Resource Load" value={`${countAssignedStaff(spotlightProject.tasks)} Staff`} detail={`${Math.max(countAssignedStaff(spotlightProject.tasks) - 2, 0)} Senior Leads`} />
+                <SpotlightMetric label="Status" value={humanizeStatus(findPrimaryStatus(spotlightProject.tasks))} detail={`Updated ${formatRelativeUpdate(spotlightProject.updatedAt)}`} />
+              </div>
+
+              <div className="row-between">
+                <div className="project-member-stack">
+                  {employeeCapacity.map((employee) => (
+                    <span key={employee.employeeId}>{employee.firstName?.[0]}{employee.lastName?.[0]}</span>
+                  ))}
+                  <small>+ {Math.max(employees.length - employeeCapacity.length, 0)} Team Members</small>
+                </div>
+                <Button>Project Space</Button>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">Create your first project to unlock the executive view.</div>
+          )}
+        </article>
+
+        <article className="project-secondary-card">
+          {secondaryProject ? (
+            <>
+              <div className="row-between">
+                <span className="project-secondary-chip">On Track</span>
+                <button className="project-dots-button" type="button">...</button>
+              </div>
+              <h3>{secondaryProject.projectName}</h3>
+              <p>{secondaryProject.description || "Sustainable housing initiative integrating solar harvesting and vertical gardens."}</p>
+              <div className="project-mini-metrics">
+                <div><span>Phases Completed</span><strong>{Math.min(secondaryProject.tasks?.length || 0, 4)}/10</strong></div>
+                <div><span>Budget Burn</span><strong>$1.2M / $3M</strong></div>
+              </div>
+              <div className="project-milestone-card">
+                <span>Next Milestone</span>
+                <strong>{secondaryProject.endDate || "Foundation Pouring"}</strong>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">A second project will appear here once your portfolio expands.</div>
+          )}
+        </article>
+      </section>
+
+      <section className="project-governance-panel">
+        <div className="panel-header compact row-between wrap-row">
+          <div>
+            <span className="kicker">Task Governance</span>
+            <h2>{spotlightProject?.projectName || "Task Governance"}</h2>
+          </div>
+          <div className="header-actions">
+            <button className="project-view-toggle active" type="button">Board</button>
+            <button className="project-view-toggle" type="button">List</button>
+          </div>
+        </div>
+        {isLoading ? (
+          <div className="loading-state">Loading projects...</div>
+        ) : spotlightProject ? (
+          <div className="project-governance-columns">
+            {Object.entries(governanceColumns).map(([status, tasks]) => (
+              <section className="project-governance-column" key={status}>
+                <div className={`project-column-header ${status.toLowerCase()}`}>
+                  <span>{humanizeStatus(status)}</span>
+                  <strong>{tasks.length}</strong>
+                </div>
+                <div className="project-column-stack">
+                  {tasks.length ? tasks.map((task) => (
+                    <article className="project-governance-card" key={task.taskId}>
+                      <span className="project-governance-tag">{task.category || "Documentation"}</span>
+                      <h3>{task.title}</h3>
+                      <p>{task.description || "No description provided."}</p>
+                      <div className="project-governance-footer">
+                        <div className="project-mini-avatars">
+                          <span>{task.assigneeName?.split(" ").map((part) => part[0]).join("").slice(0, 2) || "NA"}</span>
+                        </div>
+                        <span className={`project-priority-badge ${task.priority.toLowerCase()}`}>{task.priority}</span>
+                      </div>
+                      <select value={task.status} onChange={(event) => void handleStatusChange(task.taskId, event.target.value)}>
+                        <option value="TODO">Todo</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="IN_REVIEW">In Review</option>
+                        <option value="DONE">Done</option>
+                      </select>
+                      <textarea rows="2" placeholder="Add a comment" value={taskCommentDrafts[task.taskId] || ""} onChange={(event) => setTaskCommentDrafts((current) => ({ ...current, [task.taskId]: event.target.value }))} />
+                      <div className="project-card-actions">
+                        <button className="project-link-button" type="button" onClick={() => void handleAddComment(task.taskId)}>Post Comment</button>
+                        <label className="project-upload-label">
+                          Attach
+                          <input type="file" onChange={(event) => void handleUploadAttachment(task.taskId, event.target.files?.[0])} />
+                        </label>
+                      </div>
+                      {(task.attachments || []).length ? (
+                        <div className="project-attachment-list">
+                          {task.attachments.map((attachment) => (
+                            <button key={attachment.taskAttachmentId} type="button" onClick={() => void handleDownloadAttachment(task.taskId, attachment)}>
+                              {attachment.originalFileName}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  )) : (
+                    <div className="project-empty-card">No tasks in this lane.</div>
+                  )}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">Create or select a project to manage tasks.</div>
+        )}
+      </section>
+
+      <section className="project-lower-grid">
+        <article className="project-form-card">
           <div className="panel-header compact">
             <div>
               <span className="kicker">Projects</span>
-              <h2>Create project</h2>
+              <h2>Create Project</h2>
             </div>
           </div>
           <form className="stack-form" onSubmit={handleProjectSubmit}>
@@ -204,18 +352,20 @@ export default function ProjectsPage() {
               <option value="">Select owner</option>
               {employees.map((employee) => <option key={employee.employeeId} value={employee.employeeId}>{employee.firstName} {employee.lastName}</option>)}
             </select>
-            <input type="date" value={projectForm.startDate} onChange={(event) => setProjectForm((current) => ({ ...current, startDate: event.target.value }))} />
-            <input type="date" value={projectForm.endDate} onChange={(event) => setProjectForm((current) => ({ ...current, endDate: event.target.value }))} />
-            <button className="primary-button" disabled={!canManage || isSavingProject} type="submit">{isSavingProject ? "Saving..." : "Create project"}</button>
+            <div className="project-form-dates">
+              <input type="date" value={projectForm.startDate} onChange={(event) => setProjectForm((current) => ({ ...current, startDate: event.target.value }))} />
+              <input type="date" value={projectForm.endDate} onChange={(event) => setProjectForm((current) => ({ ...current, endDate: event.target.value }))} />
+            </div>
+            <Button disabled={!canManage || isSavingProject} type="submit">{isSavingProject ? "Saving..." : "Create Project"}</Button>
           </form>
-          {!canManage ? <p className="hint-text">Your role can view projects but cannot create them.</p> : null}
+          {!canManage ? <p className="hint-text">Your role can review projects but cannot create them.</p> : null}
         </article>
 
-        <article className="panel form-panel">
+        <article className="project-form-card">
           <div className="panel-header compact">
             <div>
               <span className="kicker">Tasks</span>
-              <h2>Assign task</h2>
+              <h2>Assign Task</h2>
             </div>
           </div>
           <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
@@ -229,78 +379,99 @@ export default function ProjectsPage() {
               <option value="">Select assignee</option>
               {employees.map((employee) => <option key={employee.employeeId} value={employee.employeeId}>{employee.firstName} {employee.lastName}</option>)}
             </select>
-            <select value={taskForm.priority} onChange={(event) => setTaskForm((current) => ({ ...current, priority: event.target.value }))}>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="CRITICAL">Critical</option>
-            </select>
-            <input type="date" value={taskForm.dueDate} onChange={(event) => setTaskForm((current) => ({ ...current, dueDate: event.target.value }))} />
-            <button className="primary-button" disabled={!canManage || isSavingTask || !selectedProjectId} type="submit">{isSavingTask ? "Saving..." : "Create task"}</button>
+            <div className="project-form-dates">
+              <select value={taskForm.priority} onChange={(event) => setTaskForm((current) => ({ ...current, priority: event.target.value }))}>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+              <input type="date" value={taskForm.dueDate} onChange={(event) => setTaskForm((current) => ({ ...current, dueDate: event.target.value }))} />
+            </div>
+            <Button disabled={!canManage || isSavingTask || !selectedProjectId} type="submit">{isSavingTask ? "Saving..." : "Create Task"}</Button>
           </form>
         </article>
-      </section>
 
-      <section className="panel data-panel">
-        <div className="panel-header compact row-between wrap-row">
-          <div>
-            <span className="kicker">Project board</span>
-            <h2>{selectedProject?.projectName || "Select a project"}</h2>
+        <article className="project-heatmap-card">
+          <div className="panel-header compact">
+            <div>
+              <span className="kicker">Staff Allocation Heatmap</span>
+              <h2>Team Capacity</h2>
+            </div>
           </div>
-          {selectedProject ? <span className="status-chip">{selectedProject.projectCode}</span> : null}
-        </div>
-        {isLoading ? (
-          <div className="loading-state">Loading projects...</div>
-        ) : selectedProject ? (
-          <div className="project-task-grid">
-            {selectedProject.tasks?.length ? selectedProject.tasks.map((task) => (
-              <article className="project-task-card" key={task.taskId}>
-                <div className="row-between wrap-row">
-                  <strong>{task.title}</strong>
-                  <span className={`status-chip task-priority-${task.priority.toLowerCase()}`}>{task.priority}</span>
-                </div>
-                <p>{task.description || "No description provided."}</p>
-                <div className="task-meta-grid">
-                  <span>Assignee: {task.assigneeName || "Unassigned"}</span>
-                  <span>Due: {task.dueDate || "-"}</span>
-                </div>
-                <select value={task.status} onChange={(event) => void handleStatusChange(task.taskId, event.target.value)}>
-                  <option value="TODO">Todo</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="IN_REVIEW">In Review</option>
-                  <option value="DONE">Done</option>
-                </select>
-                <div className="comment-stack">
-                  <strong>Comments</strong>
-                  {(task.comments || []).map((comment) => (
-                    <div className="comment-card" key={comment.taskCommentId}>
-                      <span>{comment.commentedByName}</span>
-                      <p>{comment.commentText}</p>
-                    </div>
-                  ))}
-                  {!(task.comments || []).length ? <div className="hint-text">No comments yet.</div> : null}
-                  <textarea rows="2" placeholder="Add a comment" value={taskCommentDrafts[task.taskId] || ""} onChange={(event) => setTaskCommentDrafts((current) => ({ ...current, [task.taskId]: event.target.value }))} />
-                  <button className="ghost-button compact-button" type="button" onClick={() => void handleAddComment(task.taskId)}>Post comment</button>
-                </div>
-                <div className="comment-stack">
-                  <strong>Attachments</strong>
-                  <input type="file" onChange={(event) => void handleUploadAttachment(task.taskId, event.target.files?.[0])} />
-                  {(task.attachments || []).map((attachment) => (
-                    <button className="ghost-button compact-button align-left" key={attachment.taskAttachmentId} type="button" onClick={() => void handleDownloadAttachment(task.taskId, attachment)}>
-                      {attachment.originalFileName}
-                    </button>
-                  ))}
-                  {!(task.attachments || []).length ? <div className="hint-text">No attachments yet.</div> : null}
-                </div>
-              </article>
+          <div className="project-heatmap-grid">
+            {employeeCapacity.length ? employeeCapacity.map((employee, index) => (
+              <div className="project-heatmap-member" key={employee.employeeId}>
+                <div className="project-heatmap-avatar">{employee.firstName?.[0]}{employee.lastName?.[0]}</div>
+                <h3>{employee.firstName} {employee.lastName}</h3>
+                <p>{employee.designation || "Operations Staff"}</p>
+                <span className={`project-capacity-badge ${index % 2 === 0 ? "hot" : "cool"}`}>
+                  {index % 2 === 0 ? "92% Capacity" : "45% Capacity"}
+                </span>
+              </div>
             )) : (
-              <div className="empty-state">No tasks have been created for this project.</div>
+              <div className="empty-state">No active employees available for allocation.</div>
             )}
           </div>
-        ) : (
-          <div className="empty-state">Create or select a project to manage tasks.</div>
-        )}
+        </article>
       </section>
     </div>
   );
+}
+
+function SpotlightMetric({ label, value, detail }) {
+  return (
+    <article className="project-spotlight-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{detail}</small>
+    </article>
+  );
+}
+
+function calculateProjectProgress(tasks = []) {
+  if (!tasks.length) {
+    return 0;
+  }
+  const doneCount = tasks.filter((task) => task.status === "DONE").length;
+  return Math.round((doneCount / tasks.length) * 100);
+}
+
+function countAssignedStaff(tasks = []) {
+  return new Set(tasks.map((task) => task.assigneeEmployeeId || task.assigneeName).filter(Boolean)).size;
+}
+
+function findPrimaryStatus(tasks = []) {
+  if (!tasks.length) {
+    return "TODO";
+  }
+  if (tasks.some((task) => task.status === "IN_REVIEW")) {
+    return "IN_REVIEW";
+  }
+  if (tasks.some((task) => task.status === "IN_PROGRESS")) {
+    return "IN_PROGRESS";
+  }
+  if (tasks.every((task) => task.status === "DONE")) {
+    return "DONE";
+  }
+  return "TODO";
+}
+
+function humanizeStatus(status) {
+  return status.replaceAll("_", " ");
+}
+
+function formatRelativeUpdate(value) {
+  if (!value) {
+    return "today";
+  }
+  const updatedAt = new Date(value);
+  const diffHours = Math.max(Math.round((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60)), 0);
+  if (diffHours < 1) {
+    return "just now";
+  }
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+  return `${Math.round(diffHours / 24)}d ago`;
 }

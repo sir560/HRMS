@@ -1,58 +1,58 @@
 import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard", hint: "People overview" },
-  { label: "Attendance", to: "/attendance", hint: "Daily tracking" },
-  { label: "Projects", to: "/projects", hint: "Tasks and delivery" },
-  { label: "Payroll", to: "/payroll", hint: "Compensation" },
-  { label: "Leave", to: "/leaves/apply", hint: "Requests and approvals" },
+  { label: "Dashboard", to: "/dashboard", icon: "D" },
+  { label: "Employees", to: "/employees", icon: "E" },
+  { label: "Attendance", to: "/attendance", icon: "A" },
+  { label: "Leave", to: "/leaves/apply", icon: "L" },
+  { label: "Payroll", to: "/payroll", icon: "P" },
+  { label: "Tasks", to: "/projects", icon: "T" },
+  { label: "Meetings", to: "/meetings", icon: "M" },
+  { label: "Files", to: "/files", icon: "F" },
+  { label: "Reports", to: "/dashboard", icon: "R" },
+  { label: "Settings", to: "/dashboard", icon: "S" },
 ];
 
 export default function Sidebar() {
   return (
     <aside className="sidebar">
-      <div className="mb-10 px-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#00439f] text-white">
-            <span className="text-lg font-bold">A</span>
+      <div className="sidebar-brand">
+        <div className="flex items-start gap-3">
+          <div className="sidebar-brand-mark">
+            <span className="text-sm font-bold">A</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold leading-tight text-blue-900">Architectural HRMS</h1>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Management Suite</p>
+            <h1 className="sidebar-brand-title">Architectural HRMS</h1>
+            <p className="sidebar-brand-subtitle">Management Suite</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
+      <nav className="sidebar-nav">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-3 text-sm tracking-wide transition-colors duration-200 ${
+              `sidebar-link ${
                 isActive
-                  ? "border-r-4 border-blue-700 bg-white/50 font-bold text-blue-700"
-                  : "font-medium text-slate-600 hover:bg-white hover:text-blue-600"
+                  ? "active"
+                  : ""
               }`
             }
           >
-            <div className="min-w-0">
-              <div>{item.label}</div>
-              <div className="mt-0.5 text-[10px] font-medium normal-case tracking-normal text-slate-400">{item.hint}</div>
-            </div>
+            <span className="sidebar-link-icon">{item.icon}</span>
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="mt-auto px-6 pt-6">
-        <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-blue-700">System Load</p>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full w-[32%] bg-blue-700"></div>
+      <div className="sidebar-footer">
+        <div className="sidebar-load-card">
+          <p className="sidebar-load-label">System Load</p>
+          <div className="sidebar-load-track">
+            <div className="sidebar-load-fill"></div>
           </div>
-          <p className="mt-3 text-xs text-slate-500">
-            Operations remain stable across employee, attendance, payroll, and leave modules.
-          </p>
         </div>
       </div>
     </aside>

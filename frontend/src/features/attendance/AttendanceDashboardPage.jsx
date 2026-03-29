@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { attendanceApi, employeeApi, readApiErrorMessage } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
-import AttendanceNav from "./AttendanceNav";
 
 const initialClockForm = {
   employeeId: "",
@@ -44,8 +43,8 @@ export default function AttendanceDashboardPage() {
       if (isManagement) {
         const response = await employeeApi.getEmployees({ page: 0, size: 100, active: true });
         const nextEmployees = response.data.content || [];
-        setEmployees(nextEmployees);
         const defaultEmployeeId = nextEmployees[0]?.employeeId ? String(nextEmployees[0].employeeId) : "";
+        setEmployees(nextEmployees);
         setSelectedEmployeeId(defaultEmployeeId);
         setClockForm((current) => ({ ...current, employeeId: defaultEmployeeId }));
         await loadAttendanceData(defaultEmployeeId || undefined);
@@ -110,120 +109,133 @@ export default function AttendanceDashboardPage() {
   }
 
   const activeRecord = todayRecords.find((item) => !item.clockOutAt) || null;
+  const sessionEntry = activeRecord?.clockInAt ? formatTime(activeRecord.clockInAt) : "08:50 AM";
 
   return (
-    <div className="dashboard-shell">
-      <header className="dashboard-header">
+    <div className="space-y-8">
+      <header className="page-header">
         <div>
-          <div className="eyebrow">Attendance workspace</div>
-          <h1>Daily attendance</h1>
-          <p>Clock time, today status, and current period summary.</p>
+          <h1 className="page-title">Time &amp; Absences</h1>
+          <p className="page-description">Manage your professional availability and track team presence.</p>
         </div>
+        <div className="attendance-date-chip">Today</div>
       </header>
 
-      <AttendanceNav />
+      {error || feedback ? <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || feedback}</div> : null}
 
-      {(error || feedback) && (
-        <div className={`banner ${error ? "banner-error" : "banner-success"}`}>
-          {error || feedback}
+      {isManagement ? (
+        <div className="attendance-management-bar">
+          <select value={selectedEmployeeId} onChange={(event) => { setSelectedEmployeeId(event.target.value); setClockForm((current) => ({ ...current, employeeId: event.target.value })); }}>
+            <option value="">Select employee</option>
+            {employees.map((employee) => (
+              <option key={employee.employeeId} value={employee.employeeId}>
+                {employee.firstName} {employee.lastName} | {employee.employeeCode}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+      ) : null}
 
-      <section className="stats-grid stats-grid-wide">
-        <StatCard label="Present" value={report?.presentCount ?? 0} detail="Current report window" />
-        <StatCard label="Late" value={report?.lateCount ?? 0} detail="Clock-ins after threshold" />
-        <StatCard label="Half-Day" value={report?.halfDayCount ?? 0} detail="Short working duration" />
-        <StatCard label="WFH" value={report?.workFromHomeCount ?? 0} detail="Remote attendance records" />
-      </section>
-
-      <section className="workspace-grid workspace-grid-wide attendance-grid">
-        <article className="panel form-panel">
-          <div className="panel-header compact row-between wrap-row">
+      <section className="attendance-grid-screen">
+        <div className="attendance-session-card">
+          <p>Current Session</p>
+          <h2>{activeRecord ? formatTime(activeRecord.clockInAt) : "09:42 AM"}</h2>
+          <div className="attendance-session-meta">
             <div>
-              <span className="kicker">Today</span>
-              <h2>Clock controls</h2>
+              <span>Entry</span>
+              <strong>{sessionEntry}</strong>
+            </div>
+            <div>
+              <span>Duration</span>
+              <strong>{activeRecord?.workingHours || "0h 52m"}</strong>
             </div>
           </div>
-
-          {isManagement ? (
-            <select value={selectedEmployeeId} onChange={(event) => { setSelectedEmployeeId(event.target.value); setClockForm((current) => ({ ...current, employeeId: event.target.value })); }}>
-              <option value="">Select employee</option>
-              {employees.map((employee) => (
-                <option key={employee.employeeId} value={employee.employeeId}>
-                  {employee.firstName} {employee.lastName} · {employee.employeeCode}
-                </option>
-              ))}
-            </select>
-          ) : null}
-
-          <form className="stack-form" onSubmit={handleClockIn}>
+          <form className="space-y-4" onSubmit={handleClockIn}>
             <label className="inline-toggle">
               <input type="checkbox" checked={clockForm.workFromHome} onChange={(event) => setClockForm((current) => ({ ...current, workFromHome: event.target.checked }))} />
               Mark as work from home
             </label>
-            <textarea rows="4" placeholder="Optional note for attendance record" value={clockForm.notes} onChange={(event) => setClockForm((current) => ({ ...current, notes: event.target.value }))} />
+            <textarea rows="3" placeholder="Optional note for attendance record" value={clockForm.notes} onChange={(event) => setClockForm((current) => ({ ...current, notes: event.target.value }))} />
             <div className="header-actions">
-              <button className="primary-button" disabled={isSubmitting || (isManagement && !selectedEmployeeId) || Boolean(activeRecord)} type="submit">
-                {isSubmitting ? "Saving..." : "Clock in"}
+              <button className="attendance-primary-action" disabled={isSubmitting || (isManagement && !selectedEmployeeId) || !activeRecord} onClick={() => void handleClockOut()} type="button">
+                {isSubmitting ? "Saving..." : "Clock Out Now"}
               </button>
-              <button className="ghost-button" disabled={isSubmitting || (isManagement && !selectedEmployeeId) || !activeRecord} onClick={() => void handleClockOut()} type="button">
-                {isSubmitting ? "Saving..." : "Clock out"}
+              <button className="ghost-button" disabled={isSubmitting || (isManagement && !selectedEmployeeId) || Boolean(activeRecord)} type="submit">
+                {isSubmitting ? "Saving..." : "Clock In"}
               </button>
             </div>
           </form>
+        </div>
 
-          <div className="attendance-summary-card">
-            <strong>{activeRecord ? "Clocked in" : "No active shift"}</strong>
-            <p>
-              {activeRecord
-                ? `Started at ${formatDateTime(activeRecord.clockInAt)}`
-                : "Use the controls above to begin today’s attendance record."}
-            </p>
-          </div>
-        </article>
-
-        <article className="panel data-panel">
-          <div className="panel-header compact">
+        <div className="attendance-panel">
+          <div className="attendance-panel-header">
             <div>
-              <span className="kicker">Overview</span>
-              <h2>Current period</h2>
+              <h3>Team Presence Today</h3>
+              <p>Showing status for current employee view</p>
+            </div>
+            <div className="attendance-summary-chips">
+              <span className="green">{report?.presentCount ?? 0} Present</span>
+              <span className="amber">{report?.lateCount ?? 0} Late</span>
+              <span>{report?.workFromHomeCount ?? 0} Away</span>
             </div>
           </div>
-          <div className="report-grid">
-            <ReportItem label="Average Hours" value={report?.averageWorkingHours || "00:00"} />
-            <ReportItem label="Absent" value={report?.absentCount ?? 0} />
-            <ReportItem label="Total Records" value={report?.totalRecords ?? 0} />
-            <ReportItem label="Tracked Days" value={report?.totalTrackedDays ?? 0} />
+          <div className="attendance-roster">
+            {todayRecords.length ? todayRecords.slice(0, 3).map((record) => (
+              <div className="attendance-roster-row" key={record.attendanceId}>
+                <div className="activity-employee">
+                  <div className="activity-avatar">{initialsForName(record.employeeName)}</div>
+                  <div>
+                    <p>{record.employeeName}</p>
+                    <small>{record.attendanceStatus === "WORK_FROM_HOME" ? "Remote session" : "Current shift"}</small>
+                  </div>
+                </div>
+                <span>{renderPresenceLabel(record.attendanceStatus)}</span>
+                <strong>{formatTime(record.clockInAt)}</strong>
+              </div>
+            )) : (
+              <div className="loading-state">No attendance records for today.</div>
+            )}
           </div>
-          <div className="table-scroll attendance-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Status</th>
-                  <th>Clock In</th>
-                  <th>Clock Out</th>
-                  <th>Hours</th>
-                </tr>
-              </thead>
-              <tbody>
-                {todayRecords.length ? todayRecords.map((record) => (
-                  <tr key={record.attendanceId}>
-                    <td>{record.employeeName}</td>
-                    <td><span className={`status-chip attendance-${record.attendanceStatus.toLowerCase()}`}>{formatStatus(record.attendanceStatus)}</span></td>
-                    <td>{formatDateTime(record.clockInAt)}</td>
-                    <td>{formatDateTime(record.clockOutAt)}</td>
-                    <td>{record.workingHours || "-"}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="5" className="empty-state">No attendance records for today.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        </div>
+
+        <div className="attendance-panel">
+          <div className="attendance-panel-header">
+            <div>
+              <h3>Leave Balance</h3>
+            </div>
           </div>
-        </article>
+          <div className="leave-balance-stack">
+            <LeaveBalanceItem label="Casual Leave (CL)" used={8} total={12} color="blue" />
+            <LeaveBalanceItem label="Sick Leave (SL)" used={3} total={8} color="green" />
+            <LeaveBalanceItem label="Earned Leave (EL)" used={14} total={20} color="amber" />
+          </div>
+        </div>
+
+        <div className="attendance-panel">
+          <div className="attendance-panel-header">
+            <div>
+              <h3>Leave Requests to Review</h3>
+              <p>Pending managerial approvals</p>
+            </div>
+          </div>
+          <div className="leave-review-list">
+            {(todayRecords.length ? todayRecords.slice(0, 2) : [{ attendanceId: 1, employeeName: "Sarah Jenkins" }, { attendanceId: 2, employeeName: "Michael Aris" }]).map((record, index) => (
+              <div className="leave-review-item" key={`${record.attendanceId}-review`}>
+                <div className="activity-employee">
+                  <div className="activity-avatar">{initialsForName(record.employeeName)}</div>
+                  <div>
+                    <p>{record.employeeName}</p>
+                    <small>{index === 0 ? "Sick Leave - 24 Oct - 26 Oct (3 days)" : "Casual Leave - 28 Oct (1 day)"}</small>
+                  </div>
+                </div>
+                <div className="header-actions">
+                  <button className="leave-reject-button" type="button">Reject</button>
+                  <button className="leave-approve-button" type="button">Approve</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
@@ -237,35 +249,48 @@ function buildClockPayload(clockForm, isManagement) {
   };
 }
 
-function formatDateTime(value) {
+function formatTime(value) {
   if (!value) {
     return "-";
   }
+
   return new Intl.DateTimeFormat("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   }).format(new Date(value));
 }
 
-function formatStatus(value) {
-  return value.replaceAll("_", " ");
+function renderPresenceLabel(status) {
+  if (status === "WORK_FROM_HOME") {
+    return "Work from Home";
+  }
+  if (status === "LATE") {
+    return "Late";
+  }
+  return "On-Time";
 }
 
-function StatCard({ label, value, detail }) {
-  return (
-    <article className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
-  );
+function initialsForName(name) {
+  return name
+    ?.split(" ")
+    .map((part) => part[0] || "")
+    .slice(0, 2)
+    .join("") || "TM";
 }
 
-function ReportItem({ label, value }) {
+function LeaveBalanceItem({ label, used, total, color }) {
+  const width = `${Math.round((used / total) * 100)}%`;
+
   return (
-    <div className="report-item">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className="leave-balance-item">
+      <div className="row-between">
+        <span>{label}</span>
+        <strong>{String(used).padStart(2, "0")} / {String(total).padStart(2, "0")}</strong>
+      </div>
+      <div className="leave-balance-track">
+        <div className={`leave-balance-fill ${color}`} style={{ width }}></div>
+      </div>
     </div>
   );
 }

@@ -8,10 +8,13 @@ import LoginPage from "./features/auth/LoginPage";
 import RegisterCompanyPage from "./features/auth/RegisterCompanyPage";
 import ResetPasswordPage from "./features/auth/ResetPasswordPage";
 import EmployeeDashboard from "./features/dashboard/EmployeeDashboard";
+import ExecutiveDashboardPage from "./features/dashboard/ExecutiveDashboardPage";
 import EmployeeProfilePage from "./features/employees/EmployeeProfilePage";
+import FilesPage from "./features/files/FilesPage";
 import ApplyLeavePage from "./features/leave/ApplyLeavePage";
 import LeaveApprovalPage from "./features/leave/LeaveApprovalPage";
 import MyLeavesPage from "./features/leave/MyLeavesPage";
+import MeetingsPage from "./features/meetings/MeetingsPage";
 import PayrollDashboardPage from "./features/payroll/PayrollDashboardPage";
 import SalarySlipPage from "./features/payroll/SalarySlipPage";
 import ProjectsPage from "./features/projects/ProjectsPage";
@@ -33,10 +36,13 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedLayout allowedRoles={[]} />}>
-        <Route path="/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/dashboard" element={<ExecutiveDashboardPage />} />
+        <Route path="/employees" element={<EmployeeDashboard />} />
         <Route path="/attendance" element={<AttendanceDashboardPage />} />
         <Route path="/attendance/history" element={<AttendanceHistoryPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/files" element={<FilesPage />} />
+        <Route path="/meetings" element={<MeetingsPage />} />
         <Route path="/leaves/apply" element={<ApplyLeavePage />} />
         <Route path="/leaves/my" element={<MyLeavesPage />} />
       </Route>

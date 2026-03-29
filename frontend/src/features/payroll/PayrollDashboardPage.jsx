@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Button from "../../components/ui/Button";
 import { employeeApi, payrollApi, readApiErrorMessage } from "../../services/api";
-import PayrollNav from "./PayrollNav";
 
 function currentPeriod() {
   const now = new Date();
@@ -58,14 +58,7 @@ export default function PayrollDashboardPage() {
     }
   }
 
-  async function handlePeriodSubmit(event) {
-    event.preventDefault();
-    setMessage("");
-    await hydrate(period);
-  }
-
-  async function handleRunPayroll(event) {
-    event.preventDefault();
+  async function handleRunPayroll() {
     setIsSubmitting(true);
     setError("");
     setMessage("");
@@ -88,50 +81,121 @@ export default function PayrollDashboardPage() {
     }
   }
 
+  const netPay = sum(payrollRecords, "netSalary");
+  const grossPay = sum(payrollRecords, "grossSalary");
+  const deductions = sum(payrollRecords, "totalDeductions");
+
   return (
-    <div className="dashboard-shell">
-      <header className="dashboard-header">
+    <div className="space-y-8">
+      <header className="page-header">
         <div>
-          <div className="eyebrow">Payroll workspace</div>
-          <h1>Payroll dashboard</h1>
-          <p>Run payroll, review deductions, and open salary slips.</p>
+          <h1 className="page-title">Payroll Management</h1>
+          <p className="page-description">Financial period: {monthLabel(period.month)} {period.year}</p>
+        </div>
+        <div className="header-actions">
+          <Button onClick={() => void handleRunPayroll()} disabled={isSubmitting || isLoading || employees.length === 0}>
+            {isSubmitting ? "Running..." : "Process Payroll"}
+          </Button>
         </div>
       </header>
 
-      <PayrollNav />
+      {error || message ? <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || message}</div> : null}
 
-      {(error || message) && (
-        <div className={`banner ${error ? "banner-error" : "banner-success"}`}>
-          {error || message}
-        </div>
-      )}
-
-      <section className="panel form-panel">
-        <div className="panel-header compact row-between wrap-row">
-          <div>
-            <span className="kicker">Period</span>
-            <h2>Payroll run controls</h2>
-          </div>
-        </div>
-        <form className="filter-grid filter-grid-history" onSubmit={handlePeriodSubmit}>
-          <select value={period.month} onChange={(event) => setPeriod((current) => ({ ...current, month: event.target.value }))}>
-            {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
-              <option key={month} value={month}>{month}</option>
-            ))}
-          </select>
-          <input type="number" min="2000" max="2100" value={period.year} onChange={(event) => setPeriod((current) => ({ ...current, year: event.target.value }))} />
-          <button className="ghost-button" type="submit">Load payroll</button>
-          <button className="primary-button" type="button" disabled={isSubmitting || isLoading || employees.length === 0} onClick={(event) => void handleRunPayroll(event)}>
-            {isSubmitting ? "Running..." : "Run payroll"}
-          </button>
-        </form>
+      <section className="payroll-summary-grid">
+        <article className="payroll-summary-card hero">
+          <span>Net Pay (Disbursable)</span>
+          <strong>{formatCurrency(netPay)}</strong>
+          <small>4.2% from last month</small>
+        </article>
+        <article className="payroll-summary-card">
+          <span>Total Gross Salary</span>
+          <strong>{formatCurrency(grossPay)}</strong>
+          <small>{employees.length} employees paid</small>
+        </article>
+        <article className="payroll-summary-card">
+          <span>Total Deductions</span>
+          <ul>
+            <li><span>Provident Fund (PF)</span><strong>{formatCurrency(deductions * 0.45)}</strong></li>
+            <li><span>Insurance (ESI)</span><strong>{formatCurrency(deductions * 0.15)}</strong></li>
+            <li><span>TDS (Tax)</span><strong>{formatCurrency(deductions * 0.30)}</strong></li>
+            <li><span>Loss of Pay (LOP)</span><strong>{formatCurrency(deductions * 0.10)}</strong></li>
+          </ul>
+          <p>Total Loss {formatCurrency(deductions)}</p>
+        </article>
       </section>
 
-      <section className="stats-grid stats-grid-wide">
-        <StatCard label="Employees" value={employees.length} detail="Active payroll inputs" />
-        <StatCard label="Records" value={payrollRecords.length} detail="Generated entries for period" />
-        <StatCard label="Net Payout" value={formatCurrency(sum(payrollRecords, "netSalary"))} detail="Total take-home" />
-        <StatCard label="Deductions" value={formatCurrency(sum(payrollRecords, "totalDeductions"))} detail="PF + ESI + TDS + LOP" />
+      <section className="activity-panel">
+        <div className="activity-panel-header">
+          <h3>Payment History</h3>
+          <div className="header-actions">
+            <Button variant="secondary">Export All</Button>
+            <Button variant="ghost">Filter</Button>
+          </div>
+        </div>
+
+        <div className="payroll-table">
+          <div className="payroll-table-head">
+            <span>Employee</span>
+            <span>Payment Period</span>
+            <span>Gross Pay</span>
+            <span>Deductions</span>
+            <span>Net Pay</span>
+            <span>Status</span>
+          </div>
+          {(isLoading ? [] : payrollRecords.slice(0, 3)).map((record) => (
+            <div className="payroll-table-row" key={record.payrollId}>
+              <div className="activity-employee">
+                <div className="activity-avatar">{initialsForName(record.employeeName)}</div>
+                <div>
+                  <p>{record.employeeName}</p>
+                  <small>{record.designation || "Payroll Record"}</small>
+                </div>
+              </div>
+              <span>{monthLabel(period.month)} 01 - {monthLabel(period.month)} 31, {period.year}</span>
+              <strong>{formatCurrency(record.grossSalary)}</strong>
+              <strong className="text-rose-500">-{formatCurrency(record.totalDeductions)}</strong>
+              <strong>{formatCurrency(record.netSalary)}</strong>
+              <span className={`directory-status ${record.status === "DISBURSED" ? "active" : "on-leave"}`}>{record.status}</span>
+            </div>
+          ))}
+
+          {!isLoading && payrollRecords.length === 0 ? (
+            <div className="loading-state">No payroll has been generated for this period.</div>
+          ) : null}
+        </div>
+
+        <div className="directory-pagination">
+          <p>Showing {Math.min(payrollRecords.length, 3)} of {payrollRecords.length} results</p>
+          <div className="pagination-actions">
+            <Button variant="ghost">1</Button>
+            <Button variant="ghost">2</Button>
+            <Button variant="ghost">3</Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="payroll-lower-grid">
+        <div className="payroll-trend-card">
+          <h3>Quarterly Trend</h3>
+          <div className="payroll-trend-bars">
+            {[52, 68, 82, 94].map((value, index) => (
+              <div className="payroll-trend-col" key={value}>
+                <div className={`payroll-trend-bar ${index === 3 ? "active" : ""}`} style={{ height: `${value}%` }}></div>
+                <span>{["JUL", "AUG", "SEP", "OCT"][index]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="payroll-account-card">
+          <h3>Corporate Disbursement Account</h3>
+          <p>Account ending in **** 8812</p>
+          <div className="payroll-account-rows">
+            <div><span>Available Funds</span><strong>{formatCurrency(1240500)}</strong></div>
+            <div><span>Reserved for Tax</span><strong>{formatCurrency(82400)}</strong></div>
+          </div>
+          <Button variant="ghost">Top Up Funds</Button>
+        </div>
       </section>
 
       <section className="panel data-panel">
@@ -168,7 +232,7 @@ export default function PayrollDashboardPage() {
                       <td>
                         <div className="employee-cell">
                           <strong>{employee.firstName} {employee.lastName}</strong>
-                          <span>{employee.employeeCode} · {employee.designation}</span>
+                          <span>{employee.employeeCode} | {employee.designation}</span>
                         </div>
                       </td>
                       <td><input className="mini-input" value={input.basicSalary} onChange={(event) => updateInput(employee.employeeId, "basicSalary", event.target.value, setSalaryInputs)} /></td>
@@ -187,54 +251,10 @@ export default function PayrollDashboardPage() {
                     </tr>
                   );
                 })}
-                {employees.length === 0 ? (
-                  <tr>
-                    <td colSpan="10" className="empty-state">No active employees are available for payroll.</td>
-                  </tr>
-                ) : null}
               </tbody>
             </table>
           </div>
         )}
-      </section>
-
-      <section className="panel data-panel">
-        <div className="panel-header compact">
-          <div>
-            <span className="kicker">History</span>
-            <h2>Generated payroll</h2>
-          </div>
-        </div>
-        <div className="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Employee</th>
-                <th>Gross</th>
-                <th>Deductions</th>
-                <th>Net</th>
-                <th>LOP</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payrollRecords.length ? payrollRecords.map((record) => (
-                <tr key={record.payrollId}>
-                  <td>{record.employeeName}</td>
-                  <td>{formatCurrency(record.grossSalary)}</td>
-                  <td>{formatCurrency(record.totalDeductions)}</td>
-                  <td>{formatCurrency(record.netSalary)}</td>
-                  <td>{record.lopDays}</td>
-                  <td><span className="status-chip">{record.status}</span></td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="6" className="empty-state">No payroll has been generated for this period.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       </section>
     </div>
   );
@@ -296,12 +316,14 @@ function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
-function StatCard({ label, value, detail }) {
-  return (
-    <article className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </article>
-  );
+function monthLabel(month) {
+  return new Intl.DateTimeFormat("en-IN", { month: "short" }).format(new Date(2024, Number(month) - 1, 1)).toUpperCase();
+}
+
+function initialsForName(name) {
+  return name
+    ?.split(" ")
+    .map((part) => part[0] || "")
+    .slice(0, 2)
+    .join("") || "PR";
 }
