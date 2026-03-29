@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+﻿import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -49,8 +49,10 @@ export default function RegisterCompanyPage() {
         <section className="auth-hero-card">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">Tenant onboarding</p>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight">Launch a new HR workspace in minutes.</h1>
-            <p className="mt-5 max-w-xl">Create the company tenant, provision the admin account, and enter a production-ready dashboard flow without breaking existing APIs.</p>
+            <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">Launch a new workforce command center in minutes.</h1>
+            <p className="mt-5 max-w-xl">
+              Create the company tenant, provision the first administrator, and enter the platform with a fully bootstrapped operating workspace.
+            </p>
           </div>
         </section>
 
@@ -103,3 +105,4 @@ export default function RegisterCompanyPage() {
     </div>
   );
 }
+

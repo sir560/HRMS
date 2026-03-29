@@ -6,12 +6,12 @@ export default function Button({
   ...props
 }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition duration-200 focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition duration-200 focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60";
 
   const variants = {
-    primary: "bg-blue-600 text-white shadow-sm hover:bg-blue-700 focus:ring-blue-100",
-    secondary: "bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-200",
-    ghost: "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-100",
+    primary: "bg-gradient-to-r from-[#00439f] to-[#1f5bc3] text-white shadow-lg shadow-[#00439f]/20 hover:scale-[1.02] focus:ring-blue-100",
+    secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-100",
+    ghost: "bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-100",
     danger: "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 focus:ring-rose-100",
   };
 

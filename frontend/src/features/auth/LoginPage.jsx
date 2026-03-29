@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+ï»¿import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -50,20 +50,20 @@ export default function LoginPage() {
         <section className="auth-hero-card">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">SynQ HRMS</p>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight">Clean HR operations for growing teams.</h1>
+            <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">The editorial command center for modern workforce operations.</h1>
             <p className="mt-5 max-w-xl">
-              Manage employee records, attendance, payroll, leave, and projects from a single workspace built for modern SaaS operations.
+              Manage employee records, attendance, payroll, leave, and projects from a single workspace designed to feel premium, precise, and readable under daily load.
             </p>
           </div>
 
           <div className="auth-metric-grid">
             <div className="auth-metric-card">
               <strong>Unified workspace</strong>
-              <p className="mt-2 text-sm text-slate-300">One platform for people, process, and approvals.</p>
+              <p className="mt-2 text-sm text-stone-300">People data, approvals, payroll, and delivery in one shared system.</p>
             </div>
             <div className="auth-metric-card">
-              <strong>Secure by default</strong>
-              <p className="mt-2 text-sm text-slate-300">Tenant-aware access with session refresh support.</p>
+              <strong>Tenant-safe access</strong>
+              <p className="mt-2 text-sm text-stone-300">Role-based sessions with company-scoped authentication and refresh support.</p>
             </div>
           </div>
         </section>
@@ -101,7 +101,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 name="password"
                 onChange={handleChange}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 required
                 type="password"
                 value={form.password}
@@ -129,3 +129,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

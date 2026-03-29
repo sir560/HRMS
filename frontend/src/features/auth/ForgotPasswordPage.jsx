@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
         <section className="auth-hero-card">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">Password recovery</p>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight">Generate a secure reset OTP.</h1>
+            <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">Recover access with a controlled reset flow.</h1>
             <p className="mt-5 max-w-xl">Use your company code and work email to begin the password recovery flow for your tenant workspace.</p>
           </div>
         </section>
@@ -80,3 +80,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+

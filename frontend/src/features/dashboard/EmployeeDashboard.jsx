@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+ï»¿import { Link } from "react-router-dom";
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -275,27 +275,55 @@ export default function EmployeeDashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="page-header">
-        <div>
-          <div className="eyebrow">Employee command center</div>
-          <h1 className="page-title">{user?.companyName || "SynQ HRMS"}</h1>
-          <p className="page-description">
-            Manage employee records, departments, designations, and directory operations from one clean workspace.
-          </p>
+      <section className="dashboard-hero">
+        <div className="dashboard-hero-grid">
+          <div className="hero-stack">
+            <div>
+              <div className="eyebrow">Employee command center</div>
+              <h1 className="hero-title">Executive Dashboard</h1>
+              <p className="hero-copy">
+                Personnel metrics and operational overview for the current workspace. Monitor structure, active headcount, and day-to-day movement from one editorial control plane.
+              </p>
+            </div>
+
+            <div className="hero-chip-row">
+              <Link className="hero-chip" to="/projects">Directory</Link>
+              <Link className="hero-chip" to="/attendance">Attendance</Link>
+              <Link className="hero-chip" to="/payroll">Payroll</Link>
+              <Link className="hero-chip" to="/leaves/approvals">Approvals</Link>
+            </div>
+
+            <div className="header-actions">
+              <Button variant="secondary" onClick={() => void hydrateReferenceData()}>Export-ready refresh</Button>
+              <Button onClick={resetEmployeeForm} type="button" disabled={!canManageEmployees}>New Hire</Button>
+            </div>
+          </div>
+
+          <aside className="hero-side-panel">
+            <h3>Operational snapshot</h3>
+            <ul>
+              <li>
+                <span>Total employees</span>
+                <strong>{employeesPage.totalElements}</strong>
+              </li>
+              <li>
+                <span>Departments</span>
+                <strong>{departments.length}</strong>
+              </li>
+              <li>
+                <span>Operator</span>
+                <strong>{user?.firstName || "Current"} {user?.lastName || "User"}</strong>
+              </li>
+            </ul>
+          </aside>
         </div>
-        <div className="header-actions">
-          <Link className="badge" to="/projects">Projects</Link>
-          <Link className="badge" to="/attendance">Attendance</Link>
-          <Link className="badge" to="/payroll">Payroll</Link>
-          <Link className="badge" to="/leaves/approvals">Approvals</Link>
-          <Button variant="ghost" onClick={() => void hydrateReferenceData()}>Refresh data</Button>
-        </div>
-      </header>
+      </section>
 
       <section className="stats-grid">
-        <StatCard label="Employees" value={employeesPage.totalElements} detail={`${activeEmployees} active on this page`} />
-        <StatCard label="Departments" value={departments.length} detail="Structured organization units" />
-        <StatCard label="Designations" value={designations.length} detail="Standardized job title catalog" />
+        <StatCard label="Total employees" value={employeesPage.totalElements} detail={`${activeEmployees} active on this page`} />
+        <StatCard label="Today's coverage" value={departments.length ? `${Math.max(activeEmployees, 0)}` : "0"} detail="Directory currently visible in this view" variant="warning" />
+        <StatCard label="Pending actions" value={designations.length} detail="Designation structures available for assignment" variant="danger" />
+        <StatCard label="Next payroll run" value="Ready" detail={`${departments.length} departments connected`} />
       </section>
 
       {(error || feedback) && <div className={`banner ${error ? "banner-error" : "banner-success"}`}>{error || feedback}</div>}
@@ -418,7 +446,7 @@ export default function EmployeeDashboard() {
                         <td>
                           <div className="space-y-1">
                             <div className="font-semibold text-slate-900">{employee.firstName} {employee.lastName}</div>
-                            <div className="text-xs text-slate-500">{employee.employeeCode} · {employee.email}</div>
+                            <div className="text-xs text-slate-500">{employee.employeeCode} Â· {employee.email}</div>
                           </div>
                         </td>
                         <td>{employee.department?.departmentName || "-"}</td>
@@ -443,7 +471,7 @@ export default function EmployeeDashboard() {
               </div>
 
               <div className="pagination-bar">
-                <span>Page {employeesPage.page + 1} of {Math.max(employeesPage.totalPages, 1)} · {employeesPage.totalElements} employees</span>
+                <span>Page {employeesPage.page + 1} of {Math.max(employeesPage.totalPages, 1)} Â· {employeesPage.totalElements} employees</span>
                 <div className="pagination-actions">
                   <Button variant="ghost" disabled={!employeesPage.hasPrevious} onClick={() => void fetchEmployees(employeesPage.page - 1)} type="button">Previous</Button>
                   <Button variant="ghost" disabled={!employeesPage.hasNext} onClick={() => void fetchEmployees(employeesPage.page + 1)} type="button">Next</Button>
@@ -476,12 +504,13 @@ function hasAnyRole(user, roles) {
   return roles.some((role) => userRoles.includes(role));
 }
 
-function StatCard({ label, value, detail }) {
+function StatCard({ label, value, detail, variant = "default" }) {
   return (
-    <article className="stat-card">
+    <article className={`stat-card ${variant}`}>
       <span>{label}</span>
       <strong>{value}</strong>
       <small>{detail}</small>
     </article>
   );
 }
+

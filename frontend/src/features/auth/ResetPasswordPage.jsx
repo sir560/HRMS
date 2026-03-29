@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+﻿import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
         <section className="auth-hero-card">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">Password reset</p>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight">Confirm the OTP and set a new password.</h1>
+            <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">Confirm the OTP and issue fresh credentials.</h1>
             <p className="mt-5 max-w-xl">Complete the reset flow securely and return to the login page with updated credentials.</p>
           </div>
         </section>
@@ -90,3 +90,4 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+
