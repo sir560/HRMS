@@ -1,0 +1,112 @@
+﻿{
+  "info": {
+    "name": "HRMS Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the HRMS backend."
+  },
+  "variable": [
+    {"key":"baseUrl","value":"https://hrms-backend-6y6u.onrender.com"},
+    {"key":"companyCode","value":"HRMS"},
+    {"key":"email","value":"admin@gmail.com"},
+    {"key":"password","value":"admin12345"},
+    {"key":"accessToken","value":""},
+    {"key":"refreshToken","value":""},
+    {"key":"departmentId","value":"1"},
+    {"key":"designationId","value":"1"},
+    {"key":"employeeId","value":"1"},
+    {"key":"employeeDocumentId","value":"1"},
+    {"key":"attendanceId","value":"1"},
+    {"key":"leaveTypeId","value":"1"},
+    {"key":"leaveRequestId","value":"1"},
+    {"key":"projectId","value":"1"},
+    {"key":"taskId","value":"1"},
+    {"key":"taskAttachmentId","value":"1"},
+    {"key":"month","value":"3"},
+    {"key":"year","value":"2026"}
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {"name":"Health Check","request":{"method":"GET","url":"{{baseUrl}}/api/v1/health"}}
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {"name":"Register Company","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"companyName\": \"HRMS\",\n  \"companyCode\": \"HRMS\",\n  \"adminFirstName\": \"Admin\",\n  \"adminLastName\": \"User\",\n  \"adminEmail\": \"admin@gmail.com\",\n  \"adminPassword\": \"admin12345\",\n  \"phoneNumber\": \"9999999999\"\n}"},"url":"{{baseUrl}}/api/v1/auth/register-company"}},
+        {"name":"Login","event":[{"listen":"test","script":{"type":"text/javascript","exec":["if (pm.response.code === 200) {","  const json = pm.response.json();","  pm.collectionVariables.set('accessToken', json.data.accessToken);","  pm.collectionVariables.set('refreshToken', json.data.refreshToken);","}"]}}],"request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"companyCode\": \"{{companyCode}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"},"url":"{{baseUrl}}/api/v1/auth/login"}},
+        {"name":"Refresh Token","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"},"url":"{{baseUrl}}/api/v1/auth/refresh"}},
+        {"name":"Logout","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"},"url":"{{baseUrl}}/api/v1/auth/logout"}},
+        {"name":"Forgot Password","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"companyCode\": \"{{companyCode}}\",\n  \"email\": \"{{email}}\"\n}"},"url":"{{baseUrl}}/api/v1/auth/forgot-password"}},
+        {"name":"Reset Password","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"companyCode\": \"{{companyCode}}\",\n  \"email\": \"{{email}}\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newPassword123\"\n}"},"url":"{{baseUrl}}/api/v1/auth/reset-password"}},
+        {"name":"Me","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/auth/me"}}
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {"name":"Create Department","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"departmentName\": \"Human Resources\",\n  \"departmentCode\": \"HR\",\n  \"description\": \"People operations\"\n}"},"url":"{{baseUrl}}/api/v1/departments"}},
+        {"name":"Get Departments","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/departments"}},
+        {"name":"Create Designation","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"designationName\": \"HR Manager\",\n  \"designationCode\": \"HR-MGR\",\n  \"description\": \"Manages HR workflows\"\n}"},"url":"{{baseUrl}}/api/v1/designations"}},
+        {"name":"Get Designations","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/designations"}},
+        {"name":"Update Designation","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"designationName\": \"HR Manager\",\n  \"designationCode\": \"HR-MGR\",\n  \"description\": \"Updated designation\",\n  \"active\": true\n}"},"url":"{{baseUrl}}/api/v1/designations/{{designationId}}"}},
+        {"name":"Delete Designation","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"DELETE","url":"{{baseUrl}}/api/v1/designations/{{designationId}}"}},
+        {"name":"Create Employee","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"employeeCode\": \"EMP-1001\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+919999999999\",\n  \"designationId\": {{designationId}},\n  \"dateOfJoining\": \"2024-01-15\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"departmentId\": {{departmentId}}\n}"},"url":"{{baseUrl}}/api/v1/employees"}},
+        {"name":"Get Employees","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/employees?page=0&size=10&active=true"}},
+        {"name":"Get Employee By ID","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/employees/{{employeeId}}"}},
+        {"name":"Update Employee","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phoneNumber\": \"+919999999999\",\n  \"designationId\": {{designationId}},\n  \"dateOfJoining\": \"2024-01-15\",\n  \"employmentStatus\": \"ACTIVE\",\n  \"departmentId\": {{departmentId}},\n  \"active\": true\n}"},"url":"{{baseUrl}}/api/v1/employees/{{employeeId}}"}},
+        {"name":"Delete Employee","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"DELETE","url":"{{baseUrl}}/api/v1/employees/{{employeeId}}"}},
+        {"name":"Get Employee Documents","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/employees/{{employeeId}}/documents"}},
+        {"name":"Upload Employee Document","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","body":{"mode":"formdata","formdata":[{"key":"file","type":"file","src":""},{"key":"documentType","value":"GENERAL","type":"text"}]},"url":"{{baseUrl}}/api/v1/employees/{{employeeId}}/documents"}},
+        {"name":"Delete Employee Document","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"DELETE","url":"{{baseUrl}}/api/v1/employees/{{employeeId}}/documents/{{employeeDocumentId}}"}},
+        {"name":"Download Employee Document","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/employees/{{employeeId}}/documents/{{employeeDocumentId}}/download"}}
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {"name":"Clock In","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"employeeId\": {{employeeId}},\n  \"workFromHome\": false,\n  \"notes\": \"Clock in from office\"\n}"},"url":"{{baseUrl}}/api/v1/attendance/clock-in"}},
+        {"name":"Clock Out","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"employeeId\": {{employeeId}},\n  \"notes\": \"Clock out from office\"\n}"},"url":"{{baseUrl}}/api/v1/attendance/clock-out"}},
+        {"name":"Get Attendance","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/attendance?employeeId={{employeeId}}"}},
+        {"name":"Get Today Attendance","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/attendance/today?employeeId={{employeeId}}"}},
+        {"name":"Get Attendance Report","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/attendance/report?dateFrom=2026-03-01&dateTo=2026-03-31&employeeId={{employeeId}}"}},
+        {"name":"Update Attendance","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"attendanceDate\": \"2026-03-29\",\n  \"clockInAt\": \"2026-03-29T03:30:00Z\",\n  \"clockOutAt\": \"2026-03-29T12:30:00Z\",\n  \"workFromHome\": false,\n  \"notes\": \"Adjusted manually\"\n}"},"url":"{{baseUrl}}/api/v1/attendance/{{attendanceId}}"}}
+      ]
+    },
+    {
+      "name": "Leave",
+      "item": [
+        {"name":"Get Leave Types","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/leave-types"}},
+        {"name":"Apply Leave","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"employeeId\": {{employeeId}},\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"startDate\": \"2026-04-01\",\n  \"endDate\": \"2026-04-03\",\n  \"reason\": \"Personal work\"\n}"},"url":"{{baseUrl}}/api/v1/leave/apply"}},
+        {"name":"My Leave Requests","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/leave/my-requests"}},
+        {"name":"Leave Approvals","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/leave/approvals"}},
+        {"name":"Approve Leave","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"reviewComment\": \"Approved\"\n}"},"url":"{{baseUrl}}/api/v1/leave/{{leaveRequestId}}/approve"}},
+        {"name":"Reject Leave","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"reviewComment\": \"Rejected\"\n}"},"url":"{{baseUrl}}/api/v1/leave/{{leaveRequestId}}/reject"}}
+      ]
+    },
+    {
+      "name": "Payroll",
+      "item": [
+        {"name":"Run Payroll","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"month\": {{month}},\n  \"year\": {{year}},\n  \"employees\": [\n    {\n      \"employeeId\": {{employeeId}},\n      \"basicSalary\": 50000,\n      \"hra\": 20000,\n      \"specialAllowance\": 10000,\n      \"otherAllowance\": 5000,\n      \"pfPercentage\": 12,\n      \"esiPercentage\": 0,\n      \"tdsPercentage\": 10,\n      \"lopDays\": 0,\n      \"notes\": \"Monthly payroll\"\n    }\n  ]\n}"},"url":"{{baseUrl}}/api/v1/payroll/run"}},
+        {"name":"Get Payroll For Period","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/payroll/{{month}}/{{year}}"}},
+        {"name":"Get Salary Slip","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/payroll/slip/{{employeeId}}?month={{month}}&year={{year}}"}}
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {"name":"Create Project","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"projectName\": \"HRMS Rollout\",\n  \"projectCode\": \"HRMS-001\",\n  \"description\": \"Implementation project\",\n  \"ownerEmployeeId\": {{employeeId}},\n  \"startDate\": \"2026-03-01\",\n  \"endDate\": \"2026-06-30\"\n}"},"url":"{{baseUrl}}/api/v1/projects"}},
+        {"name":"Get Projects","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/projects"}},
+        {"name":"Get Project By ID","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/projects/{{projectId}}"}},
+        {"name":"Create Task","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"title\": \"Prepare onboarding workflows\",\n  \"description\": \"Define employee onboarding process\",\n  \"priority\": \"MEDIUM\",\n  \"assigneeEmployeeId\": {{employeeId}},\n  \"dueDate\": \"2026-04-15\"\n}"},"url":"{{baseUrl}}/api/v1/projects/{{projectId}}/tasks"}},
+        {"name":"Update Task Status","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"PUT","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"status\": \"IN_PROGRESS\"\n}"},"url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/status"}},
+        {"name":"Get Task Comments","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/comments"}},
+        {"name":"Add Task Comment","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\n  \"commentText\": \"Task is in progress\"\n}"},"url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/comments"}},
+        {"name":"Get Task Attachments","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/attachments"}},
+        {"name":"Upload Task Attachment","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"POST","body":{"mode":"formdata","formdata":[{"key":"file","type":"file","src":""}]},"url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/attachments"}},
+        {"name":"Download Task Attachment","request":{"auth":{"type":"bearer","bearer":[{"key":"token","value":"{{accessToken}}","type":"string"}]},"method":"GET","url":"{{baseUrl}}/api/v1/tasks/{{taskId}}/attachments/{{taskAttachmentId}}/download"}}
+      ]
+    }
+  ]
+}
